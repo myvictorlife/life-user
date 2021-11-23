@@ -25,7 +25,7 @@ app.post("/signup", async (request: express.Request, res: express.Response) => {
   });
   functions.logger.info("Successfully created new user: ", result.uid);
   await admin.firestore().collection("users").doc(result.uid).set(newUser);
-  res.json({status: true});
+  res.json(newUser);
 });
 
 exports.api = functions.https.onRequest(app);
