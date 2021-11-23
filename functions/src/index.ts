@@ -1,9 +1,31 @@
 import * as functions from "firebase-functions";
+import * as admin from "firebase-admin";
+import * as express from "express";
+admin.initializeApp();
 
-// // Start writing Firebase Functions
-// // https://firebase.google.com/docs/functions/typescript
-//
-// export const helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+interface User {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+}
+const cors = require('cors');
+
+const app = express();
+
+// Automatically allow cross-origin requests
+app.use(cors({ origin: true }));
+
+app.post('/signup', async (request: express.Request, res: express.Response) => {
+  functions.logger.info("New User Signup", request.body);
+  const newUser: User = request.body;
+  const result = await admin.auth().createUser({
+      displayName: `${newUser.firstName} ${newUser.lastName}`,
+      email: newUser.email
+  });
+  functions.logger.info("Successfully created new user: ", result.uid);
+  await admin.firestore().collection("users").doc(result.uid).set(newUser);
+  res.json({ status: true });
+});
+
+exports.api = functions.https.onRequest(app);
